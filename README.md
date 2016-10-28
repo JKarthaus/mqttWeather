@@ -1,4 +1,4 @@
-# mqttWeather
+# mqttWeather 
 Mqtt Weather gather Data from Weather Underground, and publish the Data to a local MQTT Broker
 
 *mqttWeather* is a Application that runs as Bundle in the [**KARAF**](http://karaf.apache.org/) Application Container 
