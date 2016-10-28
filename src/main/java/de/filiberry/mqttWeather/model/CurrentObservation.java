@@ -79,7 +79,7 @@ public class CurrentObservation {
 	private Double windGustMph;
 	@SerializedName("wind_kph")
 	@Expose
-	private Integer windKph;
+	private Double windKph;
 	@SerializedName("wind_gust_kph")
 	@Expose
 	private String windGustKph;
@@ -572,7 +572,7 @@ public class CurrentObservation {
 	 * 
 	 * @return The windKph
 	 */
-	public Integer getWindKph() {
+	public Double getWindKph() {
 		return windKph;
 	}
 
@@ -581,7 +581,7 @@ public class CurrentObservation {
 	 * @param windKph
 	 *            The wind_kph
 	 */
-	public void setWindKph(Integer windKph) {
+	public void setWindKph(Double windKph) {
 		this.windKph = windKph;
 	}
 
