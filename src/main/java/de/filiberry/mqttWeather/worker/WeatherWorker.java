@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 
 import de.filiberry.mqttWeather.model.WuStation;
+import ws2300.WS2300Push;
 import de.filiberry.mqttWeather.model.AppConst;
 import de.filiberry.mqttWeather.model.MqttData;
 
@@ -28,9 +29,12 @@ public class WeatherWorker implements Job {
 
 	private Gson gson = new Gson();
 	private MemoryPersistence persistence = new MemoryPersistence();
-	private static final int mqttQOS = 2;
+	public static final int mqttQOS = 2;
 	private final static Logger LOGGER = LoggerFactory.getLogger(WeatherWorker.class);
 	private SimpleDateFormat formatRFC822 = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
+	
+	// -- WS2300 FAKE
+	private WS2300Push ws2300Push = new WS2300Push();
 
 	/**
 	 * 
@@ -46,6 +50,9 @@ public class WeatherWorker implements Job {
 			InputStreamReader reader = new InputStreamReader(url.openStream());
 			WuStation wuStation = gson.fromJson(reader, WuStation.class);
 
+			// DO WS2300 PUSH
+			ws2300Push.publish(wuStation.getCurrentObservation());
+			
 			// Connect Broker
 			MqttClient sampleClient = new MqttClient(dataMap.getString(AppConst.HOST),
 					dataMap.getString(AppConst.CLIENTID), persistence);
