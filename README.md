@@ -44,3 +44,9 @@ Check Karaf Log
 The Result in [MQTTLens](https://github.com/sandro-k/MQTTLensChromeApp) 
 
 ![Result in MQTTLens](http://www.joern-karthaus.de/blog/img/mqttweather1.png)  
+
+## Want more Infos
+[Checkout the Blog on my Website](http://www.joern-karthaus.de/blog/mqttweather.html)  
+Sorry, only in German
+
+
