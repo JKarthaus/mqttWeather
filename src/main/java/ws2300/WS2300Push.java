@@ -21,8 +21,7 @@ import de.filiberry.mqttWeather.worker.WeatherWorker;
 public class WS2300Push {
 
 	private static final String WS2300TOPIC = "/de/karthaus/wetterstation";
-	private static final String WS2300HOST = "tcp://bueropi:1883";
-	//private static final String WS2300HOST = "tcp://localhost:1883";
+	private static final String WS2300HOST = "tcp://localhost:1883";
 	private static final String CLIENTID = "BathControlWS2300";
 	private SimpleDateFormat formatRFC822 = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
 	private final static Logger LOGGER = LoggerFactory.getLogger(WS2300Push.class);
