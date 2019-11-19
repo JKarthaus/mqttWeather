@@ -24,6 +24,8 @@ import de.filiberry.mqttWeather.model.WuStation;
 import de.filiberry.mqttWeather.model.AppConst;
 import de.filiberry.mqttWeather.model.MqttData;
 
+@Deprecated
+/* Weather Underdround hast closed the free forecast service **/
 public class ForecastWorker implements Job {
 
 	private Gson gson = new Gson();

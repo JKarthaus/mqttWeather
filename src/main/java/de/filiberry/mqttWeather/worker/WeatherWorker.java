@@ -23,6 +23,7 @@ import com.google.gson.Gson;
 import de.filiberry.mqttWeather.model.AppConst;
 import de.filiberry.mqttWeather.model.MqttData;
 import de.filiberry.mqttWeather.model.WuStation;
+import de.filiberry.mqttWeather.model.weatherUnderground.WeatherUndergroundApi;
 
 public class WeatherWorker implements Job {
 
@@ -30,10 +31,10 @@ public class WeatherWorker implements Job {
 	private MemoryPersistence persistence = new MemoryPersistence();
 	public static final int mqttQOS = 2;
 	private final static Logger LOGGER = LoggerFactory.getLogger(WeatherWorker.class);
-	private SimpleDateFormat formatRFC822 = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
-	
+	private SimpleDateFormat formatWuApi = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.GERMANY);
+
 	// -- WS2300 FAKE
-	//private WS2300Push ws2300Push = new WS2300Push();
+	// private WS2300Push ws2300Push = new WS2300Push();
 
 	/**
 	 * 
@@ -47,11 +48,11 @@ public class WeatherWorker implements Job {
 			LOGGER.info("Conect Weather Underground :" + dataMap.getString(AppConst.WUURL));
 
 			InputStreamReader reader = new InputStreamReader(url.openStream());
-			WuStation wuStation = gson.fromJson(reader, WuStation.class);
+			WeatherUndergroundApi wuapi = gson.fromJson(reader, WeatherUndergroundApi.class);
 
 			// DO WS2300 PUSH
-			//ws2300Push.publish(wuStation.getCurrentObservation());
-			
+			// ws2300Push.publish(wuStation.getCurrentObservation());
+
 			// Connect Broker
 			MqttClient sampleClient = new MqttClient(dataMap.getString(AppConst.HOST),
 					dataMap.getString(AppConst.CLIENTID), persistence);
@@ -63,25 +64,31 @@ public class WeatherWorker implements Job {
 
 			// Send Temperature
 			// ------------------------------------------------------------------------------
-			String timeRfc822 = wuStation.getCurrentObservation().getObservationTimeRfc822();
+			String obsTimeLocal = wuapi.getObservations().get(0).getObsTimeLocal();
 			sampleClient.publish(dataMap.getString(AppConst.TOPIC) + "/temperature",
-					buildMQTTMessage(timeRfc822, wuStation.getCurrentObservation().getTempC().toString()));
+					buildMQTTMessage(obsTimeLocal, wuapi.getObservations().get(0).getMetric().getTemp().toString()));
+			
+			// UGLY HACK for local Heating Control
+			sampleClient.publish("heatingcontrol/outdoor/temp",
+					buildSimpleMQTTMessage(wuapi.getObservations().get(0).getMetric().getTemp().toString()));
+			
 			// Send Pressure
 			// --------------------------------------------------------------------------------
-			sampleClient.publish(dataMap.getString(AppConst.TOPIC) + "/pressure",
-					buildMQTTMessage(timeRfc822, wuStation.getCurrentObservation().getPressureMb()));
-			// Send WeatherText
+			sampleClient.publish(dataMap.getString(AppConst.TOPIC) + "/pressure", buildMQTTMessage(obsTimeLocal,
+					wuapi.getObservations().get(0).getMetric().getPressure().toString()));
+			// Send WeatherText - not supported in new API
 			// --------------------------------------------------------------------------------
-			sampleClient.publish(dataMap.getString(AppConst.TOPIC) + "/weather",
-					buildMQTTMessage(timeRfc822, wuStation.getCurrentObservation().getWeather()));
+			// sampleClient.publish(dataMap.getString(AppConst.TOPIC) + "/weather",
+			// buildMQTTMessage(obsTimeUTC,
+			// wuStation.getCurrentObservation().getWeather()));
 			// Send WindDirection
 			// --------------------------------------------------------------------------------
-			sampleClient.publish(dataMap.getString(AppConst.TOPIC) + "/windDirection",
-					buildMQTTMessage(timeRfc822, wuStation.getCurrentObservation().getWindDir()));
+			sampleClient.publish(dataMap.getString(AppConst.TOPIC) + "/windDirection", buildMQTTMessage(obsTimeLocal,
+					wuapi.getObservations().get(0).getMetric().getWindGust().toString()));
 			// Send WindKPH
 			// --------------------------------------------------------------------------------
-			sampleClient.publish(dataMap.getString(AppConst.TOPIC) + "/windKPH",
-					buildMQTTMessage(timeRfc822, wuStation.getCurrentObservation().getWindKph().toString()));
+			sampleClient.publish(dataMap.getString(AppConst.TOPIC) + "/windKPH", buildMQTTMessage(obsTimeLocal,
+					wuapi.getObservations().get(0).getMetric().getWindSpeed().toString()));
 
 			LOGGER.info("Messages send");
 			sampleClient.disconnect();
@@ -102,16 +109,22 @@ public class WeatherWorker implements Job {
 	 * @param value
 	 * @return
 	 */
-	private MqttMessage buildMQTTMessage(String timeRfc822, String value) {
+	private MqttMessage buildMQTTMessage(String wuApiDateTime, String value) {
 		MqttData mqttData = new MqttData();
 		try {
-			mqttData.setTimeStamp(formatRFC822.parse(timeRfc822));
+			mqttData.setTimeStamp(formatWuApi.parse(wuApiDateTime));
 		} catch (ParseException e) {
 			mqttData.setTimeStamp(new Date());
 			LOGGER.error(e.getMessage());
 		}
 		mqttData.setValue(value);
 		MqttMessage result = new MqttMessage(gson.toJson(mqttData).getBytes());
+		result.setQos(mqttQOS);
+		return result;
+	}
+
+	private MqttMessage buildSimpleMQTTMessage(String value) {
+		MqttMessage result = new MqttMessage(value.getBytes());
 		result.setQos(mqttQOS);
 		return result;
 	}

@@ -12,6 +12,7 @@ import org.junit.Test;
 import com.google.gson.Gson;
 
 import de.filiberry.mqttWeather.model.WuStation;
+import de.filiberry.mqttWeather.model.weatherUnderground.WeatherUndergroundApi;
 
 public class weatherUnderGroundJSON {
 
@@ -22,12 +23,12 @@ public class weatherUnderGroundJSON {
 
 		URL url;
 		try {
-			url = new URL("http://api.wunderground.com/api/e51e87f3e7592de9/conditions/q/pws:IWIEHL10.json");
+			url = new URL("https://api.weather.com/v2/pws/observations/current?stationId=INMBRECH13&format=json&units=m&apiKey=9f1c3899e0a149fc9c3899e0a139fc26");
 			InputStreamReader reader = new InputStreamReader(url.openStream());
 
-			WuStation test = gson.fromJson(reader, WuStation.class);
+			WeatherUndergroundApi test = gson.fromJson(reader, WeatherUndergroundApi.class);
 
-			System.out.println("Temperatur=" + test.getCurrentObservation().getTemperatureString());
+			System.out.println("Temperatur=" + test.getObservations().get(0).getMetric().getTemp());
 
 		} catch (MalformedURLException e) {
 			fail(e.getMessage());
